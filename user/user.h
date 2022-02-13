@@ -1,3 +1,7 @@
+ // added by me
+#include "kernel/types.h"
+
+
 struct stat;
 struct rtcdate;
 

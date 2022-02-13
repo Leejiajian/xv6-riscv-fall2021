@@ -17,7 +17,9 @@ fmtname(char *path)
   // Return blank-padded name.
   if(strlen(p) >= DIRSIZ)
     return p;
+  // from p to buf strlen(p) charactors
   memmove(buf, p, strlen(p));
+  // 在一段内存块填充特定的值
   memset(buf+strlen(p), ' ', DIRSIZ-strlen(p));
   return buf;
 }
@@ -40,7 +42,6 @@ ls(char *path)
     close(fd);
     return;
   }
-
   switch(st.type){
   case T_FILE:
     printf("%s %d %d %l\n", fmtname(path), st.type, st.ino, st.size);
