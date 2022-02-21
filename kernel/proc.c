@@ -5,7 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
-
+#include "sysinfo.h" //added by me
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -288,7 +288,7 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
-
+  np->mask = p->mask;
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
@@ -654,3 +654,15 @@ procdump(void)
     printf("\n");
   }
 }
+// calculate number of process
+uint64 cal_nproc(void) {
+  uint64 cnt = 0;
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; ++p) {
+    if(p->state != UNUSED)
+      ++cnt;
+  }
+  return cnt;
+}
+
+

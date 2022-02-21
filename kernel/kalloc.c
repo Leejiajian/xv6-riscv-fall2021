@@ -8,7 +8,7 @@
 #include "spinlock.h"
 #include "riscv.h"
 #include "defs.h"
-
+#include "sysinfo.h"    //added by me 
 void freerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
@@ -79,4 +79,17 @@ kalloc(void)
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+
+// 计算空的memory
+uint64 cal_freemem(void) {
+  uint64 result = 0;
+  struct run * p;
+  p = kmem.freelist;
+  while(p) {
+    result += 4096;
+    p = p->next;
+  }
+  return result;
 }
