@@ -6,7 +6,8 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
-
+// 添加的关于walk的声明
+extern pte_t *walk(pagetable_t pagetable, uint64 va, int alloc);
 uint64
 sys_exit(void)
 {
@@ -59,7 +60,6 @@ sys_sleep(void)
   int n;
   uint ticks0;
 
-
   if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
@@ -81,7 +81,54 @@ int
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.
-  return 0;
+  
+  uint64 base; // pointer to base
+  int npages;
+  uint64 maskaddr, begin;
+  pte_t *pte;
+  if((argaddr(0, &base) < 0) || argint(1, &npages) < 0 || argaddr(2, &maskaddr) < 0)
+    return -1;
+  struct proc *p = myproc();
+  pagetable_t pagetable = p->pagetable;
+  uint64 bitmask = 0;   // 最多64页
+  int cnt = 0;
+  for(begin = base; begin < base + npages * PGSIZE; begin += PGSIZE) {
+    if((pte = walk(pagetable, begin, 1)) == 0)
+      return -1;
+    if(*pte & PTE_A) {
+      bitmask = bitmask | (1 << cnt);// 将对应的位置位
+      *pte = *pte & (~PTE_A);   // 将PTE_A还原   
+    }
+    ++cnt;
+    
+  }
+
+  // 为啥用数组就会不正确？
+  /*
+  uint64 base, maskaddr; // pointer to base;
+  int npages;
+  uint64 begin;
+  pte_t * pte;
+  uint8 bitmask[8]; 
+  if(argaddr(0, &base) < 0 || argint(1, &npages) < 0 || argaddr(2, &maskaddr) < 0)
+    return -1;
+  struct proc *p = myproc();
+  pagetable_t pagetable = p->pagetable;
+  int cnt = 0;
+  for(begin = base; begin < npages * PGSIZE; begin += PGSIZE) {
+    if((pte = walk(pagetable, begin, 1)) == 0)
+      return -1;
+    if(*pte & PTE_A) {
+      bitmask[cnt/8] = bitmask[cnt/8] | (1 << (cnt % 8));
+      *pte = *pte & (~PTE_A);
+    }
+    ++cnt;
+  }*/
+  
+  if(copyout(pagetable, maskaddr, (char *)&bitmask, sizeof(bitmask)) < 0) {
+    return -1;
+  }
+  return 0; 
 }
 #endif
 

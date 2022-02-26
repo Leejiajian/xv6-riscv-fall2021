@@ -432,3 +432,32 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+void helpper(pagetable_t pagetable, int level, int flag) {
+    // print argv
+    int f = flag;
+    for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V){
+      if(f == 1) {
+        printf("page table %p\n", pagetable); 
+        f = 0;
+      } 
+      // this PTE points to a lower-level page table.
+      uint64 child = PTE2PA(pte);
+      if(child != 0) {
+        for(int j = 0; j <= level; ++j) {
+          if(j != 0)
+            printf(" ");
+          printf(".."); 
+        }
+        printf("%d: pte %p pa %p\n",i, pte, child);
+      }
+      if(child != 0 && level < 2)
+        helpper((pagetable_t)child, level + 1, 0);
+    }
+  }
+}
+void vmprint(pagetable_t pagetable) {
+  helpper(pagetable, 0, 1);
+}
