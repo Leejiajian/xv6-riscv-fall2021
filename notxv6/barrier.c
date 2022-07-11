@@ -30,7 +30,33 @@ barrier()
   // Block until all threads have called barrier() and
   // then increment bstate.round.
   //
+  /*
+  pthread_mutex_lock(&(bstate.barrier_mutex));
+  ++bstate.nthread;
+  if(nthread != bstate.nthread)
+    pthread_cond_wait(&(bstate.barrier_cond), &(bstate.barrier_mutex));
+  else 
+    pthread_cond_broadcast(&(bstate.barrier_cond));
   
+  bstate.nthread = 0;
+  bstate.round++;
+  pthread_mutex_unlock(&(bstate.barrier_mutex));
+  */
+  pthread_mutex_lock(&(bstate.barrier_mutex));
+  ++bstate.nthread;
+  if(nthread != bstate.nthread) {
+    pthread_cond_wait(&(bstate.barrier_cond), &(bstate.barrier_mutex));
+
+  }
+  pthread_mutex_unlock(&(bstate.barrier_mutex));
+
+  pthread_mutex_lock(&(bstate.barrier_mutex));
+  if(nthread == bstate.nthread) {
+    bstate.nthread = 0;
+    bstate.round ++;
+    pthread_cond_broadcast(&(bstate.barrier_cond));
+  }
+  pthread_mutex_unlock(&(bstate.barrier_mutex));
 }
 
 static void *
@@ -62,6 +88,9 @@ main(int argc, char *argv[])
     fprintf(stderr, "%s: %s nthread\n", argv[0], argv[0]);
     exit(-1);
   }
+
+
+
   nthread = atoi(argv[1]);
   tha = malloc(sizeof(pthread_t) * nthread);
   srandom(0);

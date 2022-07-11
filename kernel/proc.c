@@ -72,7 +72,7 @@ struct cpu*
 mycpu(void) {
   int id = cpuid();
   struct cpu *c = &cpus[id];
-  return c;
+  return c; 
 }
 
 // Return the current struct proc *, or zero if none.
